@@ -1,0 +1,2467 @@
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Home, Search, Compass, Film, Send, Heart, PlusSquare, User,
+  Menu, Moon, Sun, Bookmark, MessageCircle, Share2, MoreHorizontal,
+  X, ChevronLeft, ChevronRight, Volume2, VolumeX, Play, Pause,
+  Smile, Image as ImageIcon, MapPin, Sparkles, Check, Camera,
+  Grid, Tag, Settings, LogOut, Award, Music, SendHorizontal, Globe
+} from 'lucide-react';
+
+// ==========================================
+// INITIAL MOCK DATA & SAMPLE IMAGES
+// ==========================================
+const SAMPLE_IMAGES = [
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&q=80",
+  "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80",
+  "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80",
+  "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=80",
+  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80",
+  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80",
+  "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80",
+  "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80"
+];
+
+const FILTERS = [
+  { name: 'Normal', css: 'none' },
+  { name: 'Clarendon', css: 'contrast(1.2) saturate(1.35)' },
+  { name: 'Moon', css: 'grayscale(1) contrast(1.1) brightness(1.1)' },
+  { name: 'Lark', css: 'contrast(0.9) brightness(1.1) saturate(1.1)' },
+  { name: 'Reyes', css: 'sepia(0.22) brightness(1.1) contrast(0.85) saturate(0.75)' },
+  { name: 'Vivid', css: 'saturate(1.6) contrast(1.15)' }
+];
+
+const INITIAL_USER = {
+  id: 'u_me',
+  username: 'aarav_sharma',
+  fullName: 'Aarav Sharma | आरव शर्मा',
+  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&q=80',
+  bio: 'Digital Creator 📸 | Exploring India 🇮🇳\nTech, Travel & Good Vibes ✨\nyoutube.com/@aaravvlogs',
+  followers: 14820,
+  following: 412,
+  verified: true,
+  highlights: [
+    { id: 'h1', title: 'Ladakh 🏔️', cover: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200&q=80' },
+    { id: 'h2', title: 'Foodie 🍕', cover: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200&q=80' },
+    { id: 'h3', title: 'Tech Setup 💻', cover: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&q=80' },
+    { id: 'h4', title: 'Taj Mahal 🕌', cover: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=200&q=80' }
+  ]
+};
+
+const INITIAL_STORIES = [
+  {
+    id: 's1',
+    username: 'priya_verma',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80',
+    seen: false,
+    items: [
+      { id: 'si1', image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=80', time: '2h', caption: 'सुबह की खूबसूरत शुरुआत ताज महल के साथ ✨' },
+      { id: 'si2', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', time: '1h', caption: 'Best brunch in town! 🍕❤️' }
+    ]
+  },
+  {
+    id: 's2',
+    username: 'rohan_tech',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
+    seen: false,
+    items: [
+      { id: 'si3', image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80', time: '4h', caption: 'New AI Hardware Unboxing coming soon! 🚀' }
+    ]
+  },
+  {
+    id: 's3',
+    username: 'ananya_style',
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80',
+    seen: false,
+    items: [
+      { id: 'si4', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80', time: '5h', caption: 'Mumbai Fashion Week Vibes 💃✨' }
+    ]
+  },
+  {
+    id: 's4',
+    username: 'vikram_travels',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80',
+    seen: true,
+    items: [
+      { id: 'si5', image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80', time: '8h', caption: 'पहाड़ों की शांति 🏔️🌿' }
+    ]
+  },
+  {
+    id: 's5',
+    username: 'art_by_meera',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80',
+    seen: false,
+    items: [
+      { id: 'si6', image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80', time: '11h', caption: 'Finished my latest oil painting 🎨' }
+    ]
+  }
+];
+
+const INITIAL_POSTS = [
+  {
+    id: 'p1',
+    userId: 'u2',
+    username: 'priya_verma',
+    userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80',
+    verified: true,
+    location: 'Agra, Uttar Pradesh',
+    image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=900&q=80',
+    filter: 'none',
+    caption: 'ताज महल की खूबसूरती हर बार दिल जीत लेती है! ✨🕌 Golden hour magic in Agra. #TajMahal #IncredibleIndia #Travel',
+    category: 'Travel',
+    likes: 2845,
+    liked: false,
+    saved: false,
+    timestamp: '2 HOURS AGO',
+    comments: [
+      { id: 'c1', username: 'rohan_tech', text: 'अद्भुत तस्वीर! Lighting is just phenomenal 🔥', time: '1h' },
+      { id: 'c2', username: 'ananya_style', text: 'So dreamy! ❤️😍', time: '45m' }
+    ]
+  },
+  {
+    id: 'p2',
+    userId: 'u3',
+    username: 'rohan_tech',
+    userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
+    verified: true,
+    location: 'Bengaluru, Karnataka',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=900&q=80',
+    filter: 'contrast(1.15)',
+    caption: 'Late night coding & circuit designing 💻⚡ Building the future of AI in India! #TechIndia #Coding #Setup',
+    category: 'Tech',
+    likes: 1420,
+    liked: true,
+    saved: true,
+    timestamp: '5 HOURS AGO',
+    comments: [
+      { id: 'c3', username: 'aarav_sharma', text: 'Bhai setup tour video kab aa rahi hai? 🙌', time: '3h' }
+    ]
+  },
+  {
+    id: 'p3',
+    userId: 'u4',
+    username: 'ananya_style',
+    userAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80',
+    verified: false,
+    location: 'Mumbai, Maharashtra',
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=900&q=80',
+    filter: 'none',
+    caption: 'Vibrant colors for a vibrant mood! 💛✨ Street style shoot in Bandra. #Fashion #OOTD #MumbaiDiaries',
+    category: 'Fashion',
+    likes: 3910,
+    liked: false,
+    saved: false,
+    timestamp: '8 HOURS AGO',
+    comments: [
+      { id: 'c4', username: 'priya_verma', text: 'Slaying as always queen! 👑💛', time: '6h' }
+    ]
+  },
+  {
+    id: 'p4',
+    userId: 'u_me',
+    username: 'aarav_sharma',
+    userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&q=80',
+    verified: true,
+    location: 'Manali, Himachal Pradesh',
+    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=900&q=80',
+    filter: 'none',
+    caption: 'पहाड़ों की गोद में सुकून 🏔️🌲 Nature never goes out of style. #Himalayas #TravelPhotography #Peace',
+    category: 'Travel',
+    likes: 5120,
+    liked: true,
+    saved: false,
+    timestamp: '1 DAY AGO',
+    comments: [
+      { id: 'c5', username: 'vikram_travels', text: 'Next trip saath mein chalte hain bro! 🚙', time: '20h' }
+    ]
+  }
+];
+
+const INITIAL_REELS = [
+  {
+    id: 'r1',
+    username: 'vikram_travels',
+    userAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80',
+    image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=900&q=80',
+    caption: 'जब बादल ज़मीन से मिलते हैं ☁️🏔️ Heaven on Earth! #Kashmir #ReelsIndia #Nature',
+    audio: 'Original Audio - Vikram Travels • Pahadon Ki Dhun',
+    likes: 18400,
+    liked: false,
+    commentsCount: 342,
+    following: false
+  },
+  {
+    id: 'r2',
+    username: 'foodie_delights',
+    userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80',
+    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=900&q=80',
+    caption: 'Cheesiest Wood-Fired Pizza in Delhi! 🍕🤤 Tag a pizza lover! #DelhiFoodie #StreetFood',
+    audio: 'Trending Beat - LoFi Chill Vibes',
+    likes: 42900,
+    liked: true,
+    commentsCount: 890,
+    following: true
+  },
+  {
+    id: 'r3',
+    username: 'art_by_meera',
+    userAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80',
+    image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=900&q=80',
+    caption: '60 hours of painting in 15 seconds 🎨✨ कला ही जीवन है। #IndianArtist #PaintingReel',
+    audio: 'Classical Flute - Peaceful Melodies',
+    likes: 9520,
+    liked: false,
+    commentsCount: 156,
+    following: false
+  }
+];
+
+const INITIAL_CHATS = [
+  {
+    id: 'chat1',
+    username: 'priya_verma',
+    fullName: 'Priya Verma',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80',
+    online: true,
+    unread: 2,
+    messages: [
+      { id: 'm1', sender: 'them', text: 'Hey Aarav! तुम्हारी Manali वाली फोटो कमाल की है 😍', time: '10:30 AM', liked: true },
+      { id: 'm2', sender: 'me', text: 'Thank you so much Priya! 🙏 तुम्हारी Taj Mahal वाली reel भी viral हो रही है!', time: '10:32 AM', liked: false },
+      { id: 'm3', sender: 'them', text: 'Haha yes! Next week collab करें क्या?', time: '10:35 AM', liked: false }
+    ]
+  },
+  {
+    id: 'chat2',
+    username: 'rohan_tech',
+    fullName: 'Rohan Tech',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
+    online: true,
+    unread: 0,
+    messages: [
+      { id: 'm4', sender: 'me', text: 'भाई नया camera lens कौन सा लिया?', time: 'Yesterday', liked: false },
+      { id: 'm5', sender: 'them', text: 'Sony 24mm f/1.4 GM लिया है भाई, low light में जबरदस्त है!', time: 'Yesterday', liked: true }
+    ]
+  },
+  {
+    id: 'chat3',
+    username: 'ananya_style',
+    fullName: 'Ananya Sharma',
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80',
+    online: false,
+    unread: 0,
+    messages: [
+      { id: 'm6', sender: 'them', text: 'See you at the Mumbai Creator Meetup! ✨', time: '2d ago', liked: false }
+    ]
+  }
+];
+
+const INITIAL_NOTIFICATIONS = [
+  { id: 'n1', type: 'like', username: 'priya_verma', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=80', text: 'liked your photo. • आपकी फोटो को पसंद किया।', postThumb: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=100&q=80', time: '15m', following: true },
+  { id: 'n2', type: 'follow', username: 'vikram_travels', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&q=80', text: 'started following you. • आपको फॉलो करना शुरू किया।', time: '1h', following: false },
+  { id: 'n3', type: 'comment', username: 'rohan_tech', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80', text: 'commented: "Bhai setup tour video kab aa rahi hai? 🙌"', postThumb: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=100&q=80', time: '3h', following: true },
+  { id: 'n4', type: 'follow', username: 'art_by_meera', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80', text: 'started following you. • आपको फॉलो करना शुरू किया।', time: '5h', following: false }
+];
+
+// ==========================================
+// MAIN APPLICATION COMPONENT
+// ==========================================
+export default function App() {
+  // Theme & Language State
+  const [darkMode, setDarkMode] = useState(false);
+  const [lang, setLang] = useState('HI_EN'); // 'HI_EN' (Bilingual) or 'EN'
+
+  // Navigation State ('home', 'explore', 'reels', 'messages', 'profile')
+  const [activeTab, setActiveTab] = useState('home');
+
+  // Core Data States
+  const [currentUser, setCurrentUser] = useState(INITIAL_USER);
+  const [stories, setStories] = useState(INITIAL_STORIES);
+  const [posts, setPosts] = useState(INITIAL_POSTS);
+  const [reels, setReels] = useState(INITIAL_REELS);
+  const [chats, setChats] = useState(INITIAL_CHATS);
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+
+  // Modals & Drawers State
+  const [activeStoryIndex, setActiveStoryIndex] = useState(null);
+  const [activeStoryItemIndex, setActiveStoryItemIndex] = useState(0);
+  const [storyProgress, setStoryProgress] = useState(0);
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createMode, setCreateMode] = useState('post'); // 'post' or 'story'
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [sharePostModal, setSharePostModal] = useState(null);
+  const [selectedPostModal, setSelectedPostModal] = useState(null);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+
+  // Toast Notification State (replaces alert())
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // ==========================================
+  // STORY VIEWER AUTO-PROGRESS TIMER
+  // ==========================================
+  useEffect(() => {
+    if (activeStoryIndex === null) return;
+    const interval = setInterval(() => {
+      setStoryProgress((prev) => {
+        if (prev >= 100) {
+          handleNextStoryItem();
+          return 0;
+        }
+        return prev + 2;
+      });
+    }, 80);
+    return () => clearInterval(interval);
+  }, [activeStoryIndex, activeStoryItemIndex]);
+
+  const handleOpenStory = (idx) => {
+    setActiveStoryIndex(idx);
+    setActiveStoryItemIndex(0);
+    setStoryProgress(0);
+    setStories((prev) =>
+      prev.map((s, i) => (i === idx ? { ...s, seen: true } : s))
+    );
+  };
+
+  const handleNextStoryItem = () => {
+    const currentStory = stories[activeStoryIndex];
+    if (!currentStory) return;
+    if (activeStoryItemIndex < currentStory.items.length - 1) {
+      setActiveStoryItemIndex((prev) => prev + 1);
+      setStoryProgress(0);
+    } else if (activeStoryIndex < stories.length - 1) {
+      const nextIdx = activeStoryIndex + 1;
+      setActiveStoryIndex(nextIdx);
+      setActiveStoryItemIndex(0);
+      setStoryProgress(0);
+      setStories((prev) =>
+        prev.map((s, i) => (i === nextIdx ? { ...s, seen: true } : s))
+      );
+    } else {
+      setActiveStoryIndex(null);
+    }
+  };
+
+  const handlePrevStoryItem = () => {
+    if (activeStoryItemIndex > 0) {
+      setActiveStoryItemIndex((prev) => prev - 1);
+      setStoryProgress(0);
+    } else if (activeStoryIndex > 0) {
+      const prevIdx = activeStoryIndex - 1;
+      setActiveStoryIndex(prevIdx);
+      setActiveStoryItemIndex(0);
+      setStoryProgress(0);
+    }
+  };
+
+  // ==========================================
+  // POST INTERACTIONS (LIKE, COMMENT, SAVE)
+  // ==========================================
+  const toggleLikePost = (postId, forceLike = false) => {
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id !== postId) return post;
+        const willLike = forceLike ? true : !post.liked;
+        if (forceLike && post.liked) return post;
+        return {
+          ...post,
+          liked: willLike,
+          likes: willLike ? post.likes + 1 : post.likes - 1
+        };
+      })
+    );
+  };
+
+  const toggleSavePost = (postId) => {
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id !== postId) return post;
+        const nextSaved = !post.saved;
+        showToast(nextSaved ? 'Post Saved • पोस्ट सेव की गई 🔖' : 'Removed from Saved');
+        return { ...post, saved: nextSaved };
+      })
+    );
+  };
+
+  const addCommentToPost = (postId, text) => {
+    if (!text.trim()) return;
+    const newComment = {
+      id: 'c_' + Date.now(),
+      username: currentUser.username,
+      text: text.trim(),
+      time: 'Just now'
+    };
+    setPosts((prev) =>
+      prev.map((post) =>
+        post.id === postId
+          ? { ...post, comments: [...post.comments, newComment] }
+          : post
+      )
+    );
+    if (selectedPostModal && selectedPostModal.id === postId) {
+      setSelectedPostModal((prev) => ({
+        ...prev,
+        comments: [...prev.comments, newComment]
+      }));
+    }
+  };
+
+  // ==========================================
+  // CREATE NEW POST OR STORY
+  // ==========================================
+  const handlePublishCreation = ({ mode, image, filter, caption, location, category }) => {
+    if (mode === 'post') {
+      const newPost = {
+        id: 'p_' + Date.now(),
+        userId: currentUser.id,
+        username: currentUser.username,
+        userAvatar: currentUser.avatar,
+        verified: currentUser.verified,
+        location: location || 'India 🇮🇳',
+        image,
+        filter,
+        caption,
+        category: category || 'Travel',
+        likes: 1,
+        liked: true,
+        saved: false,
+        timestamp: 'JUST NOW',
+        comments: []
+      };
+      setPosts([newPost, ...posts]);
+      setActiveTab('home');
+      showToast('Post Shared! • आपकी पोस्ट लाइव हो गई है ✨');
+    } else {
+      // Add to user's story or prepend new story
+      const existingMyStoryIdx = stories.findIndex((s) => s.username === currentUser.username);
+      const newItem = {
+        id: 'si_' + Date.now(),
+        image,
+        time: 'Just now',
+        caption
+      };
+      if (existingMyStoryIdx !== -1) {
+        const updated = [...stories];
+        updated[existingMyStoryIdx].items.push(newItem);
+        updated[existingMyStoryIdx].seen = false;
+        setStories(updated);
+      } else {
+        setStories([
+          {
+            id: 's_' + Date.now(),
+            username: currentUser.username,
+            avatar: currentUser.avatar,
+            seen: false,
+            items: [newItem]
+          },
+          ...stories
+        ]);
+      }
+      showToast('Added to Your Story! • स्टोरी अपडेट हो गई है 🔥');
+    }
+    setIsCreateModalOpen(false);
+  };
+
+  // Unread DM Counter
+  const unreadMessagesCount = chats.reduce((acc, c) => acc + c.unread, 0);
+
+  // Theme Classes
+  const bgMain = darkMode ? 'bg-neutral-950 text-neutral-100' : 'bg-gray-50 text-gray-900';
+  const bgCard = darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200';
+  const textMuted = darkMode ? 'text-neutral-400' : 'text-gray-500';
+  const hoverBg = darkMode ? 'hover:bg-neutral-800/80' : 'hover:bg-gray-100';
+
+  return (
+    <div className={`min-h-screen flex flex-col md:flex-row transition-colors duration-200 ${bgMain} font-sans select-none sm:select-auto`}>
+      {/* ==========================================
+          TOAST NOTIFICATION BANNER
+      ========================================== */}
+      {toast && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 text-white px-5 py-2.5 rounded-full shadow-2xl font-medium text-sm flex items-center gap-2 animate-bounce">
+          <Sparkles className="w-4 h-4" />
+          <span>{toast}</span>
+        </div>
+      )}
+
+      {/* ==========================================
+          DESKTOP SIDEBAR NAVIGATION
+      ========================================== */}
+      <aside className={`hidden md:flex flex-col justify-between w-64 xl:w-72 fixed inset-y-0 left-0 border-r px-4 py-6 z-30 ${bgCard}`}>
+        <div>
+          {/* Brand Logo */}
+          <div
+            onClick={() => setActiveTab('home')}
+            className="flex items-center gap-3 px-3 mb-8 cursor-pointer group"
+          >
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
+              <Camera className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
+                InstaGramm
+              </h1>
+              <span className={`text-[10px] font-medium block -mt-1 ${textMuted}`}>
+                भारत का अपना सोशल मंच 🇮🇳
+              </span>
+            </div>
+          </div>
+
+          {/* Nav Links */}
+          <nav className="space-y-1.5">
+            <NavItem
+              icon={<Home className="w-6 h-6" />}
+              label={lang === 'HI_EN' ? 'Home • होम' : 'Home'}
+              active={activeTab === 'home' && !isNotificationsOpen}
+              onClick={() => { setActiveTab('home'); setIsNotificationsOpen(false); }}
+              darkMode={darkMode}
+            />
+            <NavItem
+              icon={<Search className="w-6 h-6" />}
+              label={lang === 'HI_EN' ? 'Explore • खोजें' : 'Explore'}
+              active={activeTab === 'explore' && !isNotificationsOpen}
+              onClick={() => { setActiveTab('explore'); setIsNotificationsOpen(false); }}
+              darkMode={darkMode}
+            />
+            <NavItem
+              icon={<Film className="w-6 h-6" />}
+              label={lang === 'HI_EN' ? 'Reels • रील्स' : 'Reels'}
+              active={activeTab === 'reels' && !isNotificationsOpen}
+              onClick={() => { setActiveTab('reels'); setIsNotificationsOpen(false); }}
+              darkMode={darkMode}
+            />
+            <NavItem
+              icon={<Send className="w-6 h-6" />}
+              label={lang === 'HI_EN' ? 'Messages • संदेश' : 'Messages'}
+              active={activeTab === 'messages' && !isNotificationsOpen}
+              badge={unreadMessagesCount}
+              onClick={() => { setActiveTab('messages'); setIsNotificationsOpen(false); }}
+              darkMode={darkMode}
+            />
+            <NavItem
+              icon={<Heart className="w-6 h-6" />}
+              label={lang === 'HI_EN' ? 'Activity • गतिविधियां' : 'Notifications'}
+              active={isNotificationsOpen}
+              badge={notifications.filter((n) => !n.following && n.type === 'follow').length}
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              darkMode={darkMode}
+            />
+            <NavItem
+              icon={<PlusSquare className="w-6 h-6" />}
+              label={lang === 'HI_EN' ? 'Create • बनाएं' : 'Create'}
+              active={isCreateModalOpen}
+              onClick={() => { setCreateMode('post'); setIsCreateModalOpen(true); }}
+              darkMode={darkMode}
+            />
+            <NavItem
+              icon={
+                <img
+                  src={currentUser.avatar}
+                  alt="Profile"
+                  className={`w-6 h-6 rounded-full object-cover ${activeTab === 'profile' ? 'ring-2 ring-pink-500' : ''}`}
+                />
+              }
+              label={lang === 'HI_EN' ? 'Profile • प्रोफ़ाइल' : 'Profile'}
+              active={activeTab === 'profile' && !isNotificationsOpen}
+              onClick={() => { setActiveTab('profile'); setIsNotificationsOpen(false); }}
+              darkMode={darkMode}
+            />
+          </nav>
+        </div>
+
+        {/* Bottom Controls: Theme & Language Switcher */}
+        <div className="space-y-2 pt-4 border-t border-gray-200 dark:border-neutral-800">
+          <button
+            onClick={() => setLang(lang === 'HI_EN' ? 'EN' : 'HI_EN')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${hoverBg}`}
+          >
+            <Globe className="w-5 h-5 text-pink-500" />
+            <span>{lang === 'HI_EN' ? 'भाषा: हिंदी + English' : 'Language: English'}</span>
+          </button>
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${hoverBg}`}
+          >
+            {darkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-indigo-500" />}
+            <span>{darkMode ? 'Light Mode • उजाला' : 'Dark Mode • डार्क'}</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* ==========================================
+          MOBILE TOP HEADER
+      ========================================== */}
+      <header className={`md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b backdrop-blur-md ${darkMode ? 'bg-neutral-950/90 border-neutral-800' : 'bg-white/90 border-gray-200'}`}>
+        <div
+          onClick={() => setActiveTab('home')}
+          className="flex items-center gap-2 cursor-pointer"
+        >
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white">
+            <Camera className="w-4 h-4" />
+          </div>
+          <span className="text-xl font-extrabold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
+            InstaGramm
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className={`p-2 rounded-full ${hoverBg}`}
+            aria-label="Toggle theme"
+          >
+            {darkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-gray-700" />}
+          </button>
+          <button
+            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            className={`relative p-2 rounded-full ${hoverBg}`}
+            aria-label="Notifications"
+          >
+            <Heart className="w-5 h-5" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-pink-500 rounded-full" />
+          </button>
+          <button
+            onClick={() => { setActiveTab('messages'); setIsNotificationsOpen(false); }}
+            className={`relative p-2 rounded-full ${hoverBg}`}
+            aria-label="Direct Messages"
+          >
+            <Send className="w-5 h-5" />
+            {unreadMessagesCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-pink-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                {unreadMessagesCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* ==========================================
+          NOTIFICATIONS DRAWER (SLIDE-OVER)
+      ========================================== */}
+      {isNotificationsOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs"
+            onClick={() => setIsNotificationsOpen(false)}
+          />
+          <div className={`relative z-50 w-full max-w-md md:ml-64 xl:ml-72 h-full border-r p-5 overflow-y-auto shadow-2xl ${bgCard}`}>
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-200 dark:border-neutral-800">
+              <div>
+                <h2 className="text-xl font-bold">Notifications • गतिविधियां</h2>
+                <p className={`text-xs ${textMuted}`}>Recent likes, comments & follow requests</p>
+              </div>
+              <button
+                onClick={() => setIsNotificationsOpen(false)}
+                className={`p-2 rounded-full ${hoverBg}`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {notifications.map((notif) => (
+                <div
+                  key={notif.id}
+                  className={`flex items-center justify-between gap-3 p-2.5 rounded-xl transition ${hoverBg}`}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <img
+                      src={notif.avatar}
+                      alt={notif.username}
+                      className="w-11 h-11 rounded-full object-cover shrink-0"
+                    />
+                    <div className="text-sm leading-snug">
+                      <span className="font-semibold mr-1">{notif.username}</span>
+                      <span className={darkMode ? 'text-neutral-300' : 'text-gray-700'}>
+                        {notif.text}
+                      </span>
+                      <span className={`block text-xs mt-0.5 ${textMuted}`}>{notif.time}</span>
+                    </div>
+                  </div>
+
+                  {notif.type === 'follow' ? (
+                    <button
+                      onClick={() => {
+                        setNotifications((prev) =>
+                          prev.map((n) =>
+                            n.id === notif.id ? { ...n, following: !n.following } : n
+                          )
+                        );
+                        showToast(notif.following ? 'Unfollowed' : `Following ${notif.username}`);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition ${
+                        notif.following
+                          ? darkMode
+                            ? 'bg-neutral-800 text-neutral-200'
+                            : 'bg-gray-200 text-gray-800'
+                          : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm'
+                      }`}
+                    >
+                      {notif.following ? 'Following' : 'Follow Back'}
+                    </button>
+                  ) : (
+                    notif.postThumb && (
+                      <img
+                        src={notif.postThumb}
+                        alt="Post"
+                        className="w-11 h-11 rounded-lg object-cover shrink-0"
+                      />
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================
+          MAIN CONTENT AREA
+      ========================================== */}
+      <main className="flex-1 md:ml-64 xl:ml-72 pb-20 md:pb-8">
+        {activeTab === 'home' && (
+          <HomeFeedView
+            currentUser={currentUser}
+            stories={stories}
+            posts={posts}
+            darkMode={darkMode}
+            lang={lang}
+            onOpenStory={handleOpenStory}
+            onOpenCreateStory={() => { setCreateMode('story'); setIsCreateModalOpen(true); }}
+            onToggleLike={toggleLikePost}
+            onToggleSave={toggleSavePost}
+            onAddComment={addCommentToPost}
+            onSharePost={(post) => setSharePostModal(post)}
+            onOpenPostModal={(post) => setSelectedPostModal(post)}
+            onNavigateProfile={() => setActiveTab('profile')}
+          />
+        )}
+
+        {activeTab === 'explore' && (
+          <ExploreView
+            posts={posts}
+            darkMode={darkMode}
+            lang={lang}
+            onSelectPost={(post) => setSelectedPostModal(post)}
+          />
+        )}
+
+        {activeTab === 'reels' && (
+          <ReelsView
+            reels={reels}
+            setReels={setReels}
+            darkMode={darkMode}
+            showToast={showToast}
+          />
+        )}
+
+        {activeTab === 'messages' && (
+          <DirectMessagesView
+            chats={chats}
+            setChats={setChats}
+            darkMode={darkMode}
+            lang={lang}
+          />
+        )}
+
+        {activeTab === 'profile' && (
+          <ProfileView
+            currentUser={currentUser}
+            posts={posts}
+            darkMode={darkMode}
+            lang={lang}
+            onEditProfile={() => setIsEditProfileOpen(true)}
+            onSelectPost={(post) => setSelectedPostModal(post)}
+            onOpenCreatePost={() => { setCreateMode('post'); setIsCreateModalOpen(true); }}
+          />
+        )}
+      </main>
+
+      {/* ==========================================
+          MOBILE BOTTOM NAVIGATION BAR
+      ========================================== */}
+      <nav className={`md:hidden fixed bottom-0 inset-x-0 z-30 flex items-center justify-around py-2.5 border-t backdrop-blur-md ${darkMode ? 'bg-neutral-950/95 border-neutral-800' : 'bg-white/95 border-gray-200'}`}>
+        <button
+          onClick={() => setActiveTab('home')}
+          className={`p-2 rounded-xl ${activeTab === 'home' ? 'text-pink-500 scale-110' : textMuted} transition`}
+        >
+          <Home className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => setActiveTab('explore')}
+          className={`p-2 rounded-xl ${activeTab === 'explore' ? 'text-pink-500 scale-110' : textMuted} transition`}
+        >
+          <Search className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => { setCreateMode('post'); setIsCreateModalOpen(true); }}
+          className="p-2 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-600 text-white shadow-md active:scale-95 transition"
+        >
+          <PlusSquare className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => setActiveTab('reels')}
+          className={`p-2 rounded-xl ${activeTab === 'reels' ? 'text-pink-500 scale-110' : textMuted} transition`}
+        >
+          <Film className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => setActiveTab('profile')}
+          className="p-1.5 rounded-full"
+        >
+          <img
+            src={currentUser.avatar}
+            alt="Me"
+            className={`w-7 h-7 rounded-full object-cover ${activeTab === 'profile' ? 'ring-2 ring-pink-500' : ''}`}
+          />
+        </button>
+      </nav>
+
+      {/* ==========================================
+          INTERACTIVE STORY VIEWER MODAL
+      ========================================== */}
+      {activeStoryIndex !== null && stories[activeStoryIndex] && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-2 sm:p-4">
+          <div className="relative w-full max-w-md h-[85vh] sm:h-[88vh] rounded-2xl overflow-hidden bg-neutral-900 shadow-2xl flex flex-col">
+            {/* Progress Bars */}
+            <div className="absolute top-3 inset-x-3 z-20 flex gap-1.5">
+              {stories[activeStoryIndex].items.map((item, idx) => (
+                <div key={item.id} className="h-1 flex-1 bg-white/30 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-white transition-all duration-75"
+                    style={{
+                      width:
+                        idx < activeStoryItemIndex
+                          ? '100%'
+                          : idx === activeStoryItemIndex
+                          ? `${storyProgress}%`
+                          : '0%'
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Header */}
+            <div className="absolute top-7 inset-x-4 z-20 flex items-center justify-between text-white">
+              <div className="flex items-center gap-2.5">
+                <img
+                  src={stories[activeStoryIndex].avatar}
+                  alt=""
+                  className="w-9 h-9 rounded-full object-cover border border-white/50"
+                />
+                <div>
+                  <span className="font-semibold text-sm block leading-none">
+                    {stories[activeStoryIndex].username}
+                  </span>
+                  <span className="text-xs text-white/75">
+                    {stories[activeStoryIndex].items[activeStoryItemIndex]?.time}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveStoryIndex(null)}
+                className="p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Story Image */}
+            <img
+              src={stories[activeStoryIndex].items[activeStoryItemIndex]?.image}
+              alt="Story"
+              className="w-full h-full object-cover"
+            />
+
+            {/* Tap Navigation Zones */}
+            <div className="absolute inset-y-16 inset-x-0 z-10 flex">
+              <div className="w-1/3 h-full cursor-pointer" onClick={handlePrevStoryItem} />
+              <div className="w-2/3 h-full cursor-pointer" onClick={handleNextStoryItem} />
+            </div>
+
+            {/* Story Caption & Quick Reply */}
+            <div className="absolute bottom-0 inset-x-0 z-20 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pt-12 text-white">
+              {stories[activeStoryIndex].items[activeStoryItemIndex]?.caption && (
+                <p className="text-sm text-center mb-3 font-medium drop-shadow">
+                  {stories[activeStoryIndex].items[activeStoryItemIndex].caption}
+                </p>
+              )}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const val = e.target.reply.value;
+                  if (val.trim()) {
+                    showToast(`Reply sent to ${stories[activeStoryIndex].username} 💌`);
+                    e.target.reset();
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <input
+                  name="reply"
+                  type="text"
+                  placeholder={`Reply to ${stories[activeStoryIndex].username}...`}
+                  className="flex-1 bg-white/15 backdrop-blur-md border border-white/30 rounded-full px-4 py-2 text-sm text-white placeholder-white/70 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => showToast('Sent ❤️ reaction!')}
+                  className="p-2 rounded-full bg-white/15 hover:bg-pink-500/80 transition"
+                >
+                  <Heart className="w-5 h-5 text-white" />
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================
+          CREATE POST / STORY MODAL
+      ========================================== */}
+      {isCreateModalOpen && (
+        <CreateModal
+          initialMode={createMode}
+          darkMode={darkMode}
+          onClose={() => setIsCreateModalOpen(false)}
+          onPublish={handlePublishCreation}
+        />
+      )}
+
+      {/* ==========================================
+          SHARE POST MODAL
+      ========================================== */}
+      {sharePostModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className={`w-full max-w-md rounded-2xl border p-5 shadow-2xl ${bgCard}`}>
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-200 dark:border-neutral-800">
+              <h3 className="font-bold text-lg">Share Post • पोस्ट शेयर करें</h3>
+              <button onClick={() => setSharePostModal(null)} className={`p-1.5 rounded-full ${hoverBg}`}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 mb-4">
+              {chats.map((chat) => (
+                <div key={chat.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img src={chat.avatar} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    <div>
+                      <p className="font-semibold text-sm">{chat.fullName}</p>
+                      <p className={`text-xs ${textMuted}`}>@{chat.username}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setChats((prev) =>
+                        prev.map((c) =>
+                          c.id === chat.id
+                            ? {
+                                ...c,
+                                messages: [
+                                  ...c.messages,
+                                  {
+                                    id: 'm_' + Date.now(),
+                                    sender: 'me',
+                                    text: `Shared a post by @${sharePostModal.username}: "${sharePostModal.caption.slice(0, 40)}..."`,
+                                    time: 'Just now',
+                                    liked: false
+                                  }
+                                ]
+                              }
+                            : c
+                        )
+                      );
+                      showToast(`Sent to ${chat.fullName} 🚀`);
+                      setSharePostModal(null);
+                    }}
+                    className="px-4 py-1.5 rounded-lg bg-pink-500 hover:bg-pink-600 text-white text-xs font-semibold transition"
+                  >
+                    Send • भेजें
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                navigator.clipboard?.writeText(window.location.href);
+                showToast('Link Copied to Clipboard! 🔗');
+                setSharePostModal(null);
+              }}
+              className={`w-full py-2.5 rounded-xl font-semibold text-sm border transition ${
+                darkMode ? 'border-neutral-700 hover:bg-neutral-800' : 'border-gray-300 hover:bg-gray-100'
+              }`}
+            >
+              Copy Post Link • लिंक कॉपी करें
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==========================================
+          SINGLE POST DETAIL MODAL (FOR EXPLORE & PROFILE)
+      ========================================== */}
+      {selectedPostModal && (
+        <PostDetailModal
+          post={posts.find((p) => p.id === selectedPostModal.id) || selectedPostModal}
+          darkMode={darkMode}
+          onClose={() => setSelectedPostModal(null)}
+          onToggleLike={toggleLikePost}
+          onToggleSave={toggleSavePost}
+          onAddComment={addCommentToPost}
+        />
+      )}
+
+      {/* ==========================================
+          EDIT PROFILE MODAL
+      ========================================== */}
+      {isEditProfileOpen && (
+        <EditProfileModal
+          user={currentUser}
+          darkMode={darkMode}
+          onClose={() => setIsEditProfileOpen(false)}
+          onSave={(updated) => {
+            setCurrentUser({ ...currentUser, ...updated });
+            setIsEditProfileOpen(false);
+            showToast('Profile Updated! • प्रोफ़ाइल अपडेट हो गई ✅');
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// NAVIGATION ITEM HELPER
+// ==========================================
+function NavItem({ icon, label, active, badge, onClick, darkMode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium transition-all ${
+        active
+          ? 'bg-gradient-to-r from-pink-500/15 to-purple-500/15 text-pink-500 font-bold'
+          : darkMode
+          ? 'text-neutral-300 hover:bg-neutral-800/80'
+          : 'text-gray-700 hover:bg-gray-100'
+      }`}
+    >
+      <div className="flex items-center gap-3.5">
+        {icon}
+        <span>{label}</span>
+      </div>
+      {badge > 0 && (
+        <span className="bg-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
+// ==========================================
+// 1. HOME FEED VIEW (STORIES + POSTS + SUGGESTIONS)
+// ==========================================
+function HomeFeedView({
+  currentUser,
+  stories,
+  posts,
+  darkMode,
+  lang,
+  onOpenStory,
+  onOpenCreateStory,
+  onToggleLike,
+  onToggleSave,
+  onAddComment,
+  onSharePost,
+  onOpenPostModal,
+  onNavigateProfile
+}) {
+  const [doubleTapPostId, setDoubleTapPostId] = useState(null);
+  const [commentInputs, setCommentInputs] = useState({});
+  const [followedSuggestions, setFollowedSuggestions] = useState({});
+
+  const bgCard = darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200';
+  const textMuted = darkMode ? 'text-neutral-400' : 'text-gray-500';
+
+  const handleDoubleTap = (postId) => {
+    setDoubleTapPostId(postId);
+    onToggleLike(postId, true);
+    setTimeout(() => setDoubleTapPostId(null), 800);
+  };
+
+  const suggestions = [
+    { username: 'kartik_music', subtitle: 'Followed by priya_verma', avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&q=80' },
+    { username: 'neha_fitness', subtitle: 'Suggested for you', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&q=80' },
+    { username: 'startup_india', subtitle: 'Popular in India 🇮🇳', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&q=80' }
+  ];
+
+  return (
+    <div className="max-w-5xl mx-auto pt-4 sm:pt-6 px-2 sm:px-6 flex justify-center gap-8">
+      {/* Left/Center Main Feed Column */}
+      <div className="w-full max-w-[540px] space-y-6">
+        {/* STORIES TRAY */}
+        <div className={`p-4 rounded-2xl border overflow-x-auto flex items-center gap-4 scrollbar-none ${bgCard}`}>
+          {/* Add Your Story Button */}
+          <div
+            onClick={onOpenCreateStory}
+            className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group"
+          >
+            <div className="relative w-16 h-16">
+              <img
+                src={currentUser.avatar}
+                alt="Your Story"
+                className="w-16 h-16 rounded-full object-cover border-2 border-gray-300 dark:border-neutral-700 group-hover:scale-105 transition"
+              />
+              <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-pink-500 text-white flex items-center justify-center border-2 border-white dark:border-neutral-900 text-xs font-bold">
+                +
+              </div>
+            </div>
+            <span className="text-xs font-medium truncate w-16 text-center">
+              {lang === 'HI_EN' ? 'आपकी स्टोरी' : 'Your Story'}
+            </span>
+          </div>
+
+          {/* Friends Stories */}
+          {stories.map((story, index) => (
+            <div
+              key={story.id}
+              onClick={() => onOpenStory(index)}
+              className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group"
+            >
+              <div
+                className={`p-[2.5px] rounded-full ${
+                  story.seen
+                    ? 'bg-gray-300 dark:bg-neutral-700'
+                    : 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600'
+                } group-hover:scale-105 transition`}
+              >
+                <div className={`p-0.5 rounded-full ${darkMode ? 'bg-neutral-900' : 'bg-white'}`}>
+                  <img
+                    src={story.avatar}
+                    alt={story.username}
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
+                </div>
+              </div>
+              <span className="text-xs font-medium truncate w-16 text-center">
+                {story.username}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* POSTS FEED */}
+        {posts.map((post) => (
+          <article key={post.id} className={`rounded-2xl border overflow-hidden shadow-xs ${bgCard}`}>
+            {/* Post Header */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-3">
+                <img
+                  src={post.userAvatar}
+                  alt={post.username}
+                  className="w-10 h-10 rounded-full object-cover ring-2 ring-pink-500/40"
+                />
+                <div>
+                  <div className="flex items-center gap-1">
+                    <span className="font-bold text-sm hover:underline cursor-pointer">
+                      {post.username}
+                    </span>
+                    {post.verified && (
+                      <span className="w-4 h-4 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px]">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  {post.location && (
+                    <span className={`text-xs block ${textMuted}`}>{post.location}</span>
+                  )}
+                </div>
+              </div>
+              <button className={`p-1.5 rounded-full ${darkMode ? 'hover:bg-neutral-800' : 'hover:bg-gray-100'}`}>
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Post Image with Double-Tap Heart Animation */}
+            <div
+              onDoubleClick={() => handleDoubleTap(post.id)}
+              className="relative bg-black flex items-center justify-center cursor-pointer overflow-hidden max-h-[580px]"
+            >
+              <img
+                src={post.image}
+                alt="Post"
+                style={{ filter: post.filter || 'none' }}
+                className="w-full object-cover"
+              />
+              {doubleTapPostId === post.id && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/15 animate-ping">
+                  <Heart className="w-24 h-24 text-white fill-pink-500 drop-shadow-2xl" />
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="px-4 pt-3 pb-4">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => onToggleLike(post.id)}
+                    className="hover:scale-110 active:scale-95 transition"
+                  >
+                    <Heart
+                      className={`w-6 h-6 ${
+                        post.liked ? 'fill-pink-500 text-pink-500' : ''
+                      }`}
+                    />
+                  </button>
+                  <button
+                    onClick={() => onOpenPostModal(post)}
+                    className="hover:scale-110 transition"
+                  >
+                    <MessageCircle className="w-6 h-6" />
+                  </button>
+                  <button
+                    onClick={() => onSharePost(post)}
+                    className="hover:scale-110 transition"
+                  >
+                    <Share2 className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => onToggleSave(post.id)}
+                  className="hover:scale-110 transition"
+                >
+                  <Bookmark
+                    className={`w-6 h-6 ${
+                      post.saved ? 'fill-amber-400 text-amber-400' : ''
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Likes Count */}
+              <p className="font-bold text-sm mb-1.5">
+                {post.likes.toLocaleString()} likes • पसंद
+              </p>
+
+              {/* Caption */}
+              <p className="text-sm leading-relaxed mb-2">
+                <span className="font-bold mr-2">{post.username}</span>
+                <span>{post.caption}</span>
+              </p>
+
+              {/* View Comments Link */}
+              {post.comments.length > 0 && (
+                <button
+                  onClick={() => onOpenPostModal(post)}
+                  className={`text-xs font-medium mb-2 block ${textMuted}`}
+                >
+                  View all {post.comments.length} comments • सभी टिप्पणियां देखें
+                </button>
+              )}
+
+              {/* Latest 2 Comments Preview */}
+              <div className="space-y-1 mb-2.5">
+                {post.comments.slice(-2).map((c) => (
+                  <div key={c.id} className="text-xs flex items-start gap-1.5">
+                    <span className="font-bold">{c.username}</span>
+                    <span className={darkMode ? 'text-neutral-300' : 'text-gray-700'}>
+                      {c.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <span className={`text-[10px] uppercase tracking-wider block mb-3 ${textMuted}`}>
+                {post.timestamp}
+              </span>
+
+              {/* Add Comment Input */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const text = commentInputs[post.id] || '';
+                  if (text.trim()) {
+                    onAddComment(post.id, text);
+                    setCommentInputs({ ...commentInputs, [post.id]: '' });
+                  }
+                }}
+                className="flex items-center gap-2 pt-2.5 border-t border-gray-200 dark:border-neutral-800"
+              >
+                <Smile className={`w-5 h-5 shrink-0 ${textMuted}`} />
+                <input
+                  type="text"
+                  value={commentInputs[post.id] || ''}
+                  onChange={(e) =>
+                    setCommentInputs({ ...commentInputs, [post.id]: e.target.value })
+                  }
+                  placeholder={lang === 'HI_EN' ? 'Add a comment... • टिप्पणी लिखें...' : 'Add a comment...'}
+                  className="flex-1 bg-transparent text-sm focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={!(commentInputs[post.id] || '').trim()}
+                  className="text-pink-500 font-bold text-sm disabled:opacity-40"
+                >
+                  Post
+                </button>
+              </form>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {/* Right Sidebar (Desktop Only) */}
+      <aside className="hidden lg:block w-80 shrink-0 space-y-6">
+        {/* Current User Mini Card */}
+        <div
+          onClick={onNavigateProfile}
+          className="flex items-center justify-between cursor-pointer group"
+        >
+          <div className="flex items-center gap-3">
+            <img
+              src={currentUser.avatar}
+              alt={currentUser.username}
+              className="w-12 h-12 rounded-full object-cover ring-2 ring-pink-500/40"
+            />
+            <div>
+              <p className="font-bold text-sm group-hover:text-pink-500 transition">
+                {currentUser.username}
+              </p>
+              <p className={`text-xs ${textMuted}`}>{currentUser.fullName}</p>
+            </div>
+          </div>
+          <span className="text-xs font-bold text-pink-500">Profile</span>
+        </div>
+
+        {/* Suggested Creators */}
+        <div className={`p-4 rounded-2xl border ${bgCard}`}>
+          <div className="flex items-center justify-between mb-4">
+            <span className={`text-xs font-bold uppercase tracking-wider ${textMuted}`}>
+              Suggested For You • सुझाव
+            </span>
+          </div>
+
+          <div className="space-y-3.5">
+            {suggestions.map((sug) => (
+              <div key={sug.username} className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <img
+                    src={sug.avatar}
+                    alt={sug.username}
+                    className="w-9 h-9 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="font-semibold text-xs">{sug.username}</p>
+                    <p className={`text-[11px] ${textMuted}`}>{sug.subtitle}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() =>
+                    setFollowedSuggestions((prev) => ({
+                      ...prev,
+                      [sug.username]: !prev[sug.username]
+                    }))
+                  }
+                  className={`text-xs font-bold transition ${
+                    followedSuggestions[sug.username]
+                      ? textMuted
+                      : 'text-pink-500 hover:text-pink-600'
+                  }`}
+                >
+                  {followedSuggestions[sug.username] ? 'Following' : 'Follow'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className={`text-[11px] leading-relaxed px-2 ${textMuted}`}>
+          About • Help • Press • API • Privacy • Terms • Locations • Language (हिंदी / English)
+          <br />© 2026 INSTA-GRAMM INDIA
+        </p>
+      </aside>
+    </div>
+  );
+}
+
+// ==========================================
+// 2. EXPLORE & SEARCH VIEW
+// ==========================================
+function ExploreView({ posts, darkMode, lang, onSelectPost }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const categories = ['All', 'Travel', 'Food', 'Tech', 'Art', 'Fashion'];
+
+  // Extra explore items combined with user posts
+  const exploreItems = [
+    ...posts,
+    {
+      id: 'ex1',
+      username: 'chef_kabir',
+      userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
+      image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80',
+      caption: 'Authentic Italian Pizza & Masala Chai fusion! 🍕☕ #Food #DesiFusion',
+      category: 'Food',
+      likes: 6420,
+      liked: false,
+      saved: false,
+      timestamp: '3 HOURS AGO',
+      comments: []
+    },
+    {
+      id: 'ex2',
+      username: 'art_by_meera',
+      userAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
+      image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=800&q=80',
+      caption: 'Colors of Indian Heritage 🎨✨ #Art #Painting',
+      category: 'Art',
+      likes: 4180,
+      liked: false,
+      saved: false,
+      timestamp: '6 HOURS AGO',
+      comments: []
+    }
+  ];
+
+  const filteredPosts = exploreItems.filter((item) => {
+    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+    const matchesSearch =
+      item.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.caption.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  return (
+    <div className="max-w-5xl mx-auto pt-4 sm:pt-6 px-3 sm:px-6">
+      {/* Search Bar */}
+      <div className="relative max-w-xl mx-auto mb-5">
+        <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={
+            lang === 'HI_EN'
+              ? 'Search creators, #hashtags, places... • खोजें...'
+              : 'Search creators, #hashtags, places...'
+          }
+          className={`w-full pl-12 pr-10 py-3 rounded-2xl border text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+            darkMode
+              ? 'bg-neutral-900 border-neutral-800 text-white'
+              : 'bg-white border-gray-200 text-gray-900 shadow-xs'
+          }`}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pink-500"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      {/* Category Pills */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4 scrollbar-none justify-start sm:justify-center">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition shrink-0 ${
+              selectedCategory === cat
+                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md'
+                : darkMode
+                ? 'bg-neutral-900 text-neutral-300 border border-neutral-800 hover:bg-neutral-800'
+                : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Masonry / Grid Layout */}
+      {filteredPosts.length === 0 ? (
+        <div className="text-center py-16 text-gray-500">
+          <p className="text-lg font-semibold">No posts found • कोई परिणाम नहीं मिला</p>
+          <p className="text-sm mt-1">Try searching another hashtag or category.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+          {filteredPosts.map((item, idx) => (
+            <div
+              key={item.id}
+              onClick={() => onSelectPost(item)}
+              className={`group relative rounded-xl overflow-hidden cursor-pointer bg-neutral-900 aspect-square ${
+                idx % 5 === 0 ? 'sm:row-span-2 sm:aspect-auto' : ''
+              }`}
+            >
+              <img
+                src={item.image}
+                alt={item.caption}
+                style={{ filter: item.filter || 'none' }}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              {/* Hover Overlay */}
+              <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-5 text-white font-bold">
+                <div className="flex items-center gap-1.5">
+                  <Heart className="w-5 h-5 fill-white" />
+                  <span>{item.likes.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <MessageCircle className="w-5 h-5 fill-white" />
+                  <span>{item.comments?.length || 12}</span>
+                </div>
+              </div>
+              <span className="absolute top-2.5 right-2.5 bg-black/50 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded-full">
+                {item.category}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// 3. VERTICAL REELS PLAYER VIEW
+// ==========================================
+function ReelsView({ reels, setReels, showToast }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+
+  const currentReel = reels[currentIndex];
+
+  const handleToggleLike = () => {
+    setReels((prev) =>
+      prev.map((r, i) =>
+        i === currentIndex
+          ? { ...r, liked: !r.liked, likes: r.liked ? r.likes - 1 : r.likes + 1 }
+          : r
+      )
+    );
+  };
+
+  const handleToggleFollow = () => {
+    setReels((prev) =>
+      prev.map((r, i) => (i === currentIndex ? { ...r, following: !r.following } : r))
+    );
+    showToast(currentReel.following ? 'Unfollowed' : `Following ${currentReel.username} ✨`);
+  };
+
+  return (
+    <div className="h-[calc(100vh-120px)] md:h-[calc(100vh-40px)] flex items-center justify-center px-3 pt-3">
+      <div className="relative w-full max-w-[400px] h-full rounded-3xl overflow-hidden bg-black shadow-2xl border border-neutral-800">
+        {/* Animated Ken Burns Visual simulating Short Video */}
+        <img
+          src={currentReel.image}
+          alt={currentReel.caption}
+          onClick={() => setIsPlaying(!isPlaying)}
+          className={`w-full h-full object-cover cursor-pointer transition-transform duration-[8000ms] ease-linear ${
+            isPlaying ? 'scale-110' : 'scale-100'
+          }`}
+        />
+
+        {/* Top Controls */}
+        <div className="absolute top-4 inset-x-4 flex items-center justify-between text-white z-20">
+          <span className="font-extrabold text-lg tracking-wide drop-shadow">
+            Reels • रील्स
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="p-2 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60"
+            >
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className="p-2 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60"
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Prev / Next Reel Navigation Buttons */}
+        <div className="absolute right-3 top-1/3 -translate-y-1/2 z-20 flex flex-col gap-2">
+          <button
+            disabled={currentIndex === 0}
+            onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+            className="p-2 rounded-full bg-black/40 text-white disabled:opacity-30 hover:bg-black/70"
+            title="Previous Reel"
+          >
+            <ChevronLeft className="w-5 h-5 rotate-90" />
+          </button>
+          <button
+            disabled={currentIndex === reels.length - 1}
+            onClick={() => setCurrentIndex((i) => Math.min(reels.length - 1, i + 1))}
+            className="p-2 rounded-full bg-black/40 text-white disabled:opacity-30 hover:bg-black/70"
+            title="Next Reel"
+          >
+            <ChevronRight className="w-5 h-5 rotate-90" />
+          </button>
+        </div>
+
+        {/* Right Side Action Bar */}
+        <div className="absolute right-3 bottom-24 z-20 flex flex-col items-center gap-5 text-white">
+          <button onClick={handleToggleLike} className="flex flex-col items-center gap-1">
+            <div className="p-2.5 rounded-full bg-black/35 backdrop-blur-xs hover:scale-110 transition">
+              <Heart
+                className={`w-7 h-7 ${currentReel.liked ? 'fill-pink-500 text-pink-500' : ''}`}
+              />
+            </div>
+            <span className="text-xs font-bold">{currentReel.likes.toLocaleString()}</span>
+          </button>
+
+          <button
+            onClick={() => showToast('Comments drawer opened 💬')}
+            className="flex flex-col items-center gap-1"
+          >
+            <div className="p-2.5 rounded-full bg-black/35 backdrop-blur-xs hover:scale-110 transition">
+              <MessageCircle className="w-7 h-7" />
+            </div>
+            <span className="text-xs font-bold">{currentReel.commentsCount}</span>
+          </button>
+
+          <button
+            onClick={() => showToast('Reel link copied! 🔗')}
+            className="flex flex-col items-center gap-1"
+          >
+            <div className="p-2.5 rounded-full bg-black/35 backdrop-blur-xs hover:scale-110 transition">
+              <Share2 className="w-7 h-7" />
+            </div>
+            <span className="text-xs font-bold">Share</span>
+          </button>
+        </div>
+
+        {/* Bottom Creator Info & Audio Ticker */}
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 pt-14 text-white z-10">
+          <div className="flex items-center gap-2.5 mb-2.5">
+            <img
+              src={currentReel.userAvatar}
+              alt={currentReel.username}
+              className="w-9 h-9 rounded-full object-cover border border-white"
+            />
+            <span className="font-bold text-sm">{currentReel.username}</span>
+            <button
+              onClick={handleToggleFollow}
+              className={`px-3 py-1 rounded-lg text-xs font-bold border transition ${
+                currentReel.following
+                  ? 'bg-white/20 border-white/40'
+                  : 'border-white hover:bg-white hover:text-black'
+              }`}
+            >
+              {currentReel.following ? 'Following' : 'Follow'}
+            </button>
+          </div>
+
+          <p className="text-sm mb-3 pr-12 line-clamp-2">{currentReel.caption}</p>
+
+          <div className="flex items-center gap-2 text-xs bg-white/15 backdrop-blur-xs px-3 py-1.5 rounded-full w-fit max-w-full">
+            <Music className="w-3.5 h-3.5 shrink-0 animate-spin" />
+            <span className="truncate">{currentReel.audio}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 4. DIRECT MESSAGES (DM) VIEW
+// ==========================================
+function DirectMessagesView({ chats, setChats, darkMode, lang }) {
+  const [selectedChatId, setSelectedChatId] = useState(chats[0]?.id);
+  const [messageText, setMessageText] = useState('');
+
+  const activeChat = chats.find((c) => c.id === selectedChatId);
+  const bgCard = darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200';
+  const textMuted = darkMode ? 'text-neutral-400' : 'text-gray-500';
+
+  const handleSelectChat = (id) => {
+    setSelectedChatId(id);
+    setChats((prev) => prev.map((c) => (c.id === id ? { ...c, unread: 0 } : c)));
+  };
+
+  const handleSendMessage = (e, customText = null) => {
+    if (e) e.preventDefault();
+    const content = customText || messageText;
+    if (!content.trim() || !activeChat) return;
+
+    const newMsg = {
+      id: 'm_' + Date.now(),
+      sender: 'me',
+      text: content.trim(),
+      time: 'Just now',
+      liked: false
+    };
+
+    setChats((prev) =>
+      prev.map((c) =>
+        c.id === activeChat.id ? { ...c, messages: [...c.messages, newMsg] } : c
+      )
+    );
+    if (!customText) setMessageText('');
+
+    // Simulated Smart Auto-Reply after 1.2s
+    setTimeout(() => {
+      const replies = [
+        'बिल्कुल! Sounds great 🙌✨',
+        'Haha love that! 😍🔥',
+        'हाँ ज़रूर, let’s plan this soon!',
+        'Thanks for sharing! ❤️'
+      ];
+      const randomReply = replies[Math.floor(Math.random() * replies.length)];
+      setChats((prev) =>
+        prev.map((c) =>
+          c.id === activeChat.id
+            ? {
+                ...c,
+                messages: [
+                  ...c.messages,
+                  {
+                    id: 'm_auto_' + Date.now(),
+                    sender: 'them',
+                    text: randomReply,
+                    time: 'Just now',
+                    liked: false
+                  }
+                ]
+              }
+            : c
+        )
+      );
+    }, 1200);
+  };
+
+  const toggleMessageHeart = (msgId) => {
+    setChats((prev) =>
+      prev.map((c) =>
+        c.id === activeChat.id
+          ? {
+              ...c,
+              messages: c.messages.map((m) =>
+                m.id === msgId ? { ...m, liked: !m.liked } : m
+              )
+            }
+          : c
+      )
+    );
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto pt-3 sm:pt-6 px-2 sm:px-6 h-[calc(100vh-130px)] md:h-[calc(100vh-50px)]">
+      <div className={`h-full rounded-2xl border overflow-hidden flex shadow-sm ${bgCard}`}>
+        {/* Inbox Sidebar */}
+        <div className="w-full sm:w-80 border-r border-gray-200 dark:border-neutral-800 flex flex-col">
+          <div className="p-4 border-b border-gray-200 dark:border-neutral-800 flex items-center justify-between">
+            <h2 className="font-bold text-lg">Messages • संदेश</h2>
+            <span className="text-xs font-semibold text-pink-500">Primary</span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-neutral-800/60">
+            {chats.map((chat) => {
+              const lastMsg = chat.messages[chat.messages.length - 1];
+              const isSelected = chat.id === selectedChatId;
+              return (
+                <div
+                  key={chat.id}
+                  onClick={() => handleSelectChat(chat.id)}
+                  className={`flex items-center gap-3 p-3.5 cursor-pointer transition ${
+                    isSelected
+                      ? darkMode
+                        ? 'bg-neutral-800'
+                        : 'bg-pink-50/70'
+                      : darkMode
+                      ? 'hover:bg-neutral-800/50'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="relative shrink-0">
+                    <img
+                      src={chat.avatar}
+                      alt={chat.username}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    {chat.online && (
+                      <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-neutral-900 rounded-full" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="font-bold text-sm truncate">{chat.fullName}</p>
+                      <span className={`text-[10px] ${textMuted}`}>{lastMsg?.time}</span>
+                    </div>
+                    <p
+                      className={`text-xs truncate mt-0.5 ${
+                        chat.unread > 0 ? 'font-bold text-pink-500' : textMuted
+                      }`}
+                    >
+                      {lastMsg?.text}
+                    </p>
+                  </div>
+                  {chat.unread > 0 && (
+                    <span className="w-5 h-5 rounded-full bg-pink-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      {chat.unread}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Active Chat Window */}
+        {activeChat ? (
+          <div className="hidden sm:flex flex-1 flex-col">
+            {/* Chat Header */}
+            <div className="p-4 border-b border-gray-200 dark:border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img
+                  src={activeChat.avatar}
+                  alt={activeChat.username}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-bold text-sm">{activeChat.fullName}</p>
+                  <p className="text-xs text-emerald-500 font-medium">
+                    {activeChat.online ? 'Active now • ऑनलाइन' : 'Offline'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages Feed */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-3">
+              {activeChat.messages.map((msg) => {
+                const isMe = msg.sender === 'me';
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                  >
+                    <div
+                      onDoubleClick={() => toggleMessageHeart(msg.id)}
+                      className={`relative max-w-[75%] px-4 py-2.5 rounded-2xl text-sm cursor-pointer ${
+                        isMe
+                          ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-br-xs'
+                          : darkMode
+                          ? 'bg-neutral-800 text-neutral-100 rounded-bl-xs'
+                          : 'bg-gray-100 text-gray-900 rounded-bl-xs'
+                      }`}
+                    >
+                      {msg.text}
+                      {msg.liked && (
+                        <span className="absolute -bottom-2.5 right-2 bg-white dark:bg-neutral-900 rounded-full p-0.5 shadow text-xs">
+                          ❤️
+                        </span>
+                      )}
+                    </div>
+                    <span className={`text-[10px] mt-1 ${textMuted}`}>{msg.time}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Quick Emoji Reaction Bar */}
+            <div className="px-4 py-1.5 flex items-center gap-2 border-t border-gray-100 dark:border-neutral-800/60">
+              {['❤️', '😂', '🔥', '🙌', 'नमस्ते 🙏'].map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => handleSendMessage(null, emoji)}
+                  className={`px-2.5 py-1 rounded-full text-xs border transition ${
+                    darkMode
+                      ? 'border-neutral-800 hover:bg-neutral-800'
+                      : 'border-gray-200 hover:bg-gray-100'
+                  }`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+
+            {/* Message Input */}
+            <form
+              onSubmit={handleSendMessage}
+              className="p-3 border-t border-gray-200 dark:border-neutral-800 flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder={lang === 'HI_EN' ? 'Message... • संदेश लिखें...' : 'Message...'}
+                className={`flex-1 px-4 py-2.5 rounded-full text-sm focus:outline-none ${
+                  darkMode ? 'bg-neutral-800 text-white' : 'bg-gray-100 text-gray-900'
+                }`}
+              />
+              <button
+                type="submit"
+                disabled={!messageText.trim()}
+                className="p-2.5 rounded-full bg-pink-500 hover:bg-pink-600 text-white disabled:opacity-40 transition"
+              >
+                <SendHorizontal className="w-5 h-5" />
+              </button>
+            </form>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 5. USER PROFILE VIEW
+// ==========================================
+function ProfileView({
+  currentUser,
+  posts,
+  darkMode,
+  lang,
+  onEditProfile,
+  onSelectPost,
+  onOpenCreatePost
+}) {
+  const [profileTab, setProfileTab] = useState('posts'); // 'posts', 'saved', 'tagged'
+
+  const myPosts = posts.filter((p) => p.username === currentUser.username);
+  const savedPosts = posts.filter((p) => p.saved);
+  const taggedPosts = posts.slice(0, 2);
+
+  const displayedPosts =
+    profileTab === 'posts' ? myPosts : profileTab === 'saved' ? savedPosts : taggedPosts;
+
+  const textMuted = darkMode ? 'text-neutral-400' : 'text-gray-500';
+
+  return (
+    <div className="max-w-4xl mx-auto pt-6 px-4 sm:px-6">
+      {/* Profile Header */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-10 pb-8 border-b border-gray-200 dark:border-neutral-800">
+        <div className="p-1 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 shrink-0">
+          <img
+            src={currentUser.avatar}
+            alt={currentUser.username}
+            className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white dark:border-neutral-950"
+          />
+        </div>
+
+        <div className="flex-1 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+            <div className="flex items-center justify-center sm:justify-start gap-1.5">
+              <h2 className="text-xl font-bold">{currentUser.username}</h2>
+              {currentUser.verified && (
+                <span className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs">
+                  ✓
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={onEditProfile}
+                className={`px-4 py-1.5 rounded-xl text-xs font-bold border transition ${
+                  darkMode
+                    ? 'bg-neutral-900 border-neutral-700 hover:bg-neutral-800'
+                    : 'bg-white border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                {lang === 'HI_EN' ? 'Edit Profile • संपादित करें' : 'Edit Profile'}
+              </button>
+              <button
+                onClick={onOpenCreatePost}
+                className="px-4 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm"
+              >
+                + New Post
+              </button>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center justify-center sm:justify-start gap-6 mb-4 text-sm">
+            <div>
+              <span className="font-bold">{myPosts.length}</span>{' '}
+              <span className={textMuted}>posts</span>
+            </div>
+            <div>
+              <span className="font-bold">{currentUser.followers.toLocaleString()}</span>{' '}
+              <span className={textMuted}>followers</span>
+            </div>
+            <div>
+              <span className="font-bold">{currentUser.following}</span>{' '}
+              <span className={textMuted}>following</span>
+            </div>
+          </div>
+
+          {/* Bio */}
+          <p className="font-bold text-sm mb-1">{currentUser.fullName}</p>
+          <p className="text-sm whitespace-pre-line leading-relaxed">{currentUser.bio}</p>
+        </div>
+      </div>
+
+      {/* Story Highlights */}
+      <div className="flex items-center gap-5 py-6 overflow-x-auto scrollbar-none border-b border-gray-200 dark:border-neutral-800">
+        {currentUser.highlights.map((hl) => (
+          <div key={hl.id} className="flex flex-col items-center gap-1.5 shrink-0">
+            <div className="p-0.5 rounded-full border-2 border-gray-300 dark:border-neutral-700">
+              <img
+                src={hl.cover}
+                alt={hl.title}
+                className="w-16 h-16 rounded-full object-cover"
+              />
+            </div>
+            <span className="text-xs font-medium">{hl.title}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Profile Tabs */}
+      <div className="flex items-center justify-center gap-8 border-b border-gray-200 dark:border-neutral-800">
+        <button
+          onClick={() => setProfileTab('posts')}
+          className={`flex items-center gap-2 py-3.5 text-xs font-bold uppercase tracking-wider border-t-2 transition ${
+            profileTab === 'posts'
+              ? 'border-pink-500 text-pink-500'
+              : `border-transparent ${textMuted}`
+          }`}
+        >
+          <Grid className="w-4 h-4" />
+          <span>Posts</span>
+        </button>
+        <button
+          onClick={() => setProfileTab('saved')}
+          className={`flex items-center gap-2 py-3.5 text-xs font-bold uppercase tracking-wider border-t-2 transition ${
+            profileTab === 'saved'
+              ? 'border-pink-500 text-pink-500'
+              : `border-transparent ${textMuted}`
+          }`}
+        >
+          <Bookmark className="w-4 h-4" />
+          <span>Saved ({savedPosts.length})</span>
+        </button>
+        <button
+          onClick={() => setProfileTab('tagged')}
+          className={`flex items-center gap-2 py-3.5 text-xs font-bold uppercase tracking-wider border-t-2 transition ${
+            profileTab === 'tagged'
+              ? 'border-pink-500 text-pink-500'
+              : `border-transparent ${textMuted}`
+          }`}
+        >
+          <Tag className="w-4 h-4" />
+          <span>Tagged</span>
+        </button>
+      </div>
+
+      {/* Posts Grid */}
+      {displayedPosts.length === 0 ? (
+        <div className="text-center py-14 text-gray-500">
+          <p className="font-semibold">No posts here yet • अभी कोई पोस्ट नहीं है</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-4 pt-4">
+          {displayedPosts.map((post) => (
+            <div
+              key={post.id}
+              onClick={() => onSelectPost(post)}
+              className="group relative aspect-square rounded-lg overflow-hidden bg-neutral-900 cursor-pointer"
+            >
+              <img
+                src={post.image}
+                alt=""
+                style={{ filter: post.filter || 'none' }}
+                className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-4 text-white font-bold text-sm">
+                <span className="flex items-center gap-1">
+                  <Heart className="w-4 h-4 fill-white" /> {post.likes}
+                </span>
+                <span className="flex items-center gap-1">
+                  <MessageCircle className="w-4 h-4 fill-white" /> {post.comments.length}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==========================================
+// 6. CREATE POST / STORY MODAL (WITH FILTERS)
+// ==========================================
+function CreateModal({ initialMode, darkMode, onClose, onPublish }) {
+  const [mode, setMode] = useState(initialMode);
+  const [selectedImage, setSelectedImage] = useState(SAMPLE_IMAGES[0]);
+  const [selectedFilter, setSelectedFilter] = useState(FILTERS[0]);
+  const [caption, setCaption] = useState('');
+  const [location, setLocation] = useState('New Delhi, India');
+  const [category, setCategory] = useState('Travel');
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          setSelectedImage(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const bgCard = darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200';
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+      <div className={`w-full max-w-2xl rounded-2xl border overflow-hidden shadow-2xl ${bgCard}`}>
+        {/* Modal Header */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 dark:border-neutral-800">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMode('post')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                mode === 'post' ? 'bg-pink-500 text-white' : 'text-gray-500'
+              }`}
+            >
+              Create Post • पोस्ट
+            </button>
+            <button
+              onClick={() => setMode('story')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                mode === 'story' ? 'bg-purple-600 text-white' : 'text-gray-500'
+              }`}
+            >
+              Add Story • स्टोरी
+            </button>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          {/* Image Preview & Filters */}
+          <div className="p-4 bg-black/5 dark:bg-black/30 flex flex-col justify-between">
+            <div className="relative aspect-square rounded-xl overflow-hidden bg-black mb-3">
+              <img
+                src={selectedImage}
+                alt="Preview"
+                style={{ filter: selectedFilter.css }}
+                className="w-full h-full object-cover"
+              />
+              <label className="absolute bottom-3 right-3 bg-black/70 hover:bg-black text-white text-xs font-semibold px-3 py-1.5 rounded-full cursor-pointer flex items-center gap-1.5 backdrop-blur-xs">
+                <ImageIcon className="w-3.5 h-3.5" />
+                <span>Upload Photo</span>
+                <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+              </label>
+            </div>
+
+            {/* Sample Gallery Thumbnails */}
+            <div>
+              <p className="text-[11px] font-bold uppercase text-gray-500 mb-1.5">
+                Or pick a sample photo:
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {SAMPLE_IMAGES.map((img, i) => (
+                  <img
+                    key={i}
+                    src={img}
+                    alt=""
+                    onClick={() => setSelectedImage(img)}
+                    className={`w-11 h-11 rounded-lg object-cover cursor-pointer shrink-0 border-2 ${
+                      selectedImage === img ? 'border-pink-500' : 'border-transparent'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Caption, Filters & Details */}
+          <div className="p-4 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              {/* Filter Selector */}
+              <div>
+                <label className="text-xs font-bold block mb-1.5">
+                  Photo Filter • फ़िल्टर चुनें
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {FILTERS.map((f) => (
+                    <button
+                      key={f.name}
+                      type="button"
+                      onClick={() => setSelectedFilter(f)}
+                      className={`py-1.5 px-2 rounded-lg text-xs font-medium border transition ${
+                        selectedFilter.name === f.name
+                          ? 'border-pink-500 bg-pink-500/10 text-pink-500 font-bold'
+                          : darkMode
+                          ? 'border-neutral-800 hover:bg-neutral-800'
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      {f.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Caption */}
+              <div>
+                <label className="text-xs font-bold block mb-1">
+                  Caption • कैप्शन लिखें
+                </label>
+                <textarea
+                  rows={3}
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  placeholder="Write something inspiring in Hindi or English... ✨"
+                  className={`w-full p-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 ${
+                    darkMode
+                      ? 'bg-neutral-800 border-neutral-700 text-white'
+                      : 'bg-gray-50 border-gray-200 text-gray-900'
+                  }`}
+                />
+              </div>
+
+              {mode === 'post' && (
+                <>
+                  <div>
+                    <label className="text-xs font-bold block mb-1">Location • स्थान</label>
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                        darkMode
+                          ? 'bg-neutral-800 border-neutral-700 text-white'
+                          : 'bg-gray-50 border-gray-200 text-gray-900'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold block mb-1">Category</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                        darkMode
+                          ? 'bg-neutral-800 border-neutral-700 text-white'
+                          : 'bg-gray-50 border-gray-200 text-gray-900'
+                      }`}
+                    >
+                      {['Travel', 'Food', 'Tech', 'Art', 'Fashion'].map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={() =>
+                onPublish({
+                  mode,
+                  image: selectedImage,
+                  filter: selectedFilter.css,
+                  caption: caption || 'Sharing good vibes! ✨🇮🇳',
+                  location,
+                  category
+                })
+              }
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 text-white font-bold text-sm shadow-lg hover:opacity-95 transition"
+            >
+              {mode === 'post' ? 'Share Post • पोस्ट करें' : 'Publish Story • स्टोरी लगाएं'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 7. POST DETAIL MODAL (COMMENTS & FULL VIEW)
+// ==========================================
+function PostDetailModal({ post, darkMode, onClose, onToggleLike, onToggleSave, onAddComment }) {
+  const [commentText, setCommentText] = useState('');
+  const bgCard = darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200';
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6">
+      <div className={`w-full max-w-4xl rounded-2xl border overflow-hidden grid grid-cols-1 md:grid-cols-2 max-h-[90vh] shadow-2xl ${bgCard}`}>
+        <div className="bg-black flex items-center justify-center max-h-[50vh] md:max-h-[85vh]">
+          <img
+            src={post.image}
+            alt=""
+            style={{ filter: post.filter || 'none' }}
+            className="w-full h-full object-contain"
+          />
+        </div>
+
+        <div className="flex flex-col justify-between max-h-[45vh] md:max-h-[85vh]">
+          {/* Header */}
+          <div className="p-4 border-b border-gray-200 dark:border-neutral-800 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <img src={post.userAvatar} alt="" className="w-9 h-9 rounded-full object-cover" />
+              <span className="font-bold text-sm">{post.username}</span>
+            </div>
+            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Caption + Comments List */}
+          <div className="flex-1 p-4 overflow-y-auto space-y-3">
+            <p className="text-sm pb-3 border-b border-gray-100 dark:border-neutral-800">
+              <span className="font-bold mr-2">{post.username}</span>
+              {post.caption}
+            </p>
+
+            {post.comments?.length === 0 ? (
+              <p className="text-xs text-gray-500 text-center py-6">
+                No comments yet. Be the first! • पहली टिप्पणी करें!
+              </p>
+            ) : (
+              post.comments?.map((c) => (
+                <div key={c.id} className="text-sm flex items-start justify-between gap-2">
+                  <div>
+                    <span className="font-bold mr-2">{c.username}</span>
+                    <span>{c.text}</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 shrink-0">{c.time}</span>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Footer Actions & Comment Box */}
+          <div className="p-4 border-t border-gray-200 dark:border-neutral-800">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-4">
+                <button onClick={() => onToggleLike(post.id)}>
+                  <Heart className={`w-6 h-6 ${post.liked ? 'fill-pink-500 text-pink-500' : ''}`} />
+                </button>
+                <span className="font-bold text-sm">{post.likes.toLocaleString()} likes</span>
+              </div>
+              <button onClick={() => onToggleSave(post.id)}>
+                <Bookmark className={`w-6 h-6 ${post.saved ? 'fill-amber-400 text-amber-400' : ''}`} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (commentText.trim()) {
+                  onAddComment(post.id, commentText);
+                  setCommentText('');
+                }
+              }}
+              className="flex items-center gap-2 pt-2"
+            >
+              <input
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Write a comment..."
+                className="flex-1 bg-transparent text-sm focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!commentText.trim()}
+                className="text-pink-500 font-bold text-sm disabled:opacity-40"
+              >
+                Post
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 8. EDIT PROFILE MODAL
+// ==========================================
+function EditProfileModal({ user, darkMode, onClose, onSave }) {
+  const [fullName, setFullName] = useState(user.fullName);
+  const [username, setUsername] = useState(user.username);
+  const [bio, setBio] = useState(user.bio);
+
+  const bgCard = darkMode ? 'bg-neutral-900 border-neutral-800' : 'bg-white border-gray-200';
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className={`w-full max-w-md rounded-2xl border p-5 shadow-2xl ${bgCard}`}>
+        <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-200 dark:border-neutral-800">
+          <h3 className="font-bold text-lg">Edit Profile • प्रोफ़ाइल संपादित करें</h3>
+          <button onClick={onClose} className="p-1 rounded-full">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSave({ fullName, username, bio });
+          }}
+          className="space-y-4"
+        >
+          <div>
+            <label className="text-xs font-bold block mb-1">Full Name • पूरा नाम</label>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className={`w-full px-3 py-2 rounded-xl border text-sm ${
+                darkMode ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200'
+              }`}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold block mb-1">Username • यूज़रनेम</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={`w-full px-3 py-2 rounded-xl border text-sm ${
+                darkMode ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200'
+              }`}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold block mb-1">Bio • परिचय</label>
+            <textarea
+              rows={3}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className={`w-full px-3 py-2 rounded-xl border text-sm ${
+                darkMode ? 'bg-neutral-800 border-neutral-700' : 'bg-gray-50 border-gray-200'
+              }`}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-sm"
+          >
+            Save Changes • सेव करें
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
